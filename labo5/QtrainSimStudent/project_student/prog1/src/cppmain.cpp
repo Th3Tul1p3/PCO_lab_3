@@ -3,7 +3,7 @@
 //  / ___/ /__/ /_/ / / __// // / __// // / //
 // /_/   \___/\____/ /____/\___/____/\___/  //
 //                                          //
-// Auteurs : Nom Prénom, Nom Prénom
+// Auteurs : Arn Jerôme, Bonzon Tiffany
 //
 #include "ctrain_handler.h"
 
@@ -24,13 +24,22 @@ static Locomotive locoB(42 /* Numéro (pour commande trains sur maquette réelle
 //Arret d'urgence
 void emergency_stop()
 {
-    // arrêt des deux loco, exctinction des phares et affichage d'un message
-    locoA.arreter();
-    locoB.arreter();
-    locoA.eteindrePhares();
-    locoB.eteindrePhares();
-    locoA.afficherMessage("Arrêt d'urgence locoA");
-    locoB.afficherMessage("Arrêt d'urgence locoB");
+    Locomotive locos[] = {locoA, locoB};
+
+    // Arrêt des Locos
+    // Effectué avant le reste pour s'assurer que chaque locomotive s'arrête le plus vite possible,
+    //  les actions supplémentaires peuvent être effectuées après l'arrêt
+    for(Locomotive loco : locos) {
+        loco.arreter();
+    }
+
+    // Eteindre les phares et afficher les messages dans la textboxes propre à la loco
+    for(Locomotive loco : locos) {
+        loco.eteindrePhares();
+        loco.afficherMessage("Arrêt d'urgence");
+    }
+
+    // Message global
     afficher_message("\nSTOP!");
 }
 
