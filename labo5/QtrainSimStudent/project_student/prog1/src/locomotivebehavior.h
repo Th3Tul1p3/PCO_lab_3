@@ -11,20 +11,28 @@
 #include "locomotive.h"
 #include "launchable.h"
 #include "sharedsectioninterface.h"
-#include <QVector>
 
 /**
  * @brief La classe LocomotiveBehavior représente le comportement d'une locomotive
  */
 class LocomotiveBehavior : public Launchable
 {
+private:
+    int startPos;
+
+    // Indique la direction des locomotives (true si direction initiale, false autrement)
+    //  Serait mieux d'avoir cet attribut dans la classe Locomotive
+    bool initialDirectionLocoA, initialDirectionLocoB;
 public:
     /*!
      * \brief locomotiveBehavior Constructeur de la classe
      * \param loco la locomotive dont on représente le comportement
      */
-    LocomotiveBehavior(Locomotive& loco, std::shared_ptr<SharedSectionInterface> sharedSection , QVector<int> contactList, unsigned int contatPointsTD,unsigned int contactPointsD) :
-        loco(loco), sharedSection(sharedSection), contactList(contactList),CONTACT_POINTS_1(contatPointsTD), CONTACT_POINTS_2(contactPointsD){
+    LocomotiveBehavior(Locomotive& loco, std::shared_ptr<SharedSectionInterface> sharedSection, int startPos /*, autres paramètres éventuels */) : loco(loco),
+                                                                                                                                                   sharedSection(sharedSection),
+                                                                                                                                                   startPos(startPos),
+                                                                                                                                                   initialDirectionLocoA(true),
+                                                                                                                                                   initialDirectionLocoB(true) {
     }
 
 protected:
@@ -53,20 +61,15 @@ protected:
      */
     std::shared_ptr<SharedSectionInterface> sharedSection;
 
-    QVector<int> contactList;
-    /*
-     * Vous êtes libres d'ajouter des méthodes ou attributs
-     *
-     * Par exemple la priorité ou le parcours
+    /**
+     * @brief accessSharedSection Fonction permettant à une loco d'entrer et de sortir de la SS
+     * @param isInitDirection Un bool indiquant la direction de la loco
+     * @param entryInitDirection Le point de contact avant l'entrée de la loco si elle va dans sa direction initiale
+     * @param entryChangedDirection Le point de contact avant l'entrée de la loco si elle ne va pas dans sa direction initiale
+     * @param exitInitDirection Le point de sortie si la loco va dans sa direction initiale
+     * @param exitChangedDirection Le point de sortie si la loco ne va pas dans sa direction initiale
      */
-private:
-    void getAccessSS(unsigned int actualContact, unsigned int pointsTD, unsigned int pointsD);
-    // contact auquel on change l'aiguillage sur tout droit
-    const unsigned int CONTACT_POINTS_1;
-    // contact auquel on change l'aiguillage sur dévié
-    const unsigned int CONTACT_POINTS_2;
-    // garde une trace de la demande de bloquage de la section paratagée
-    bool sharedSectionRequested = false;
+    void accessSharedSection(bool isInitDirection, int entryInitDirection, int entryChangedDirection, int exitInitDirection, int exitChangedDirection);
 };
 
 #endif // LOCOMOTIVEBEHAVIOR_H

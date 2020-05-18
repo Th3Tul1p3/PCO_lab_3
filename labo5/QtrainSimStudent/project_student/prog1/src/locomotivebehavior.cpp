@@ -8,22 +8,6 @@
 #include "locomotivebehavior.h"
 #include "ctrain_handler.h"
 
-#define NB_TOUR_CHANGEMENT_SENS 2
-
-void LocomotiveBehavior::getAccessSS(unsigned int actualContact, unsigned int points1, unsigned int points2)
-{
-    // si les contacts sont ceux d'entrée ou de sortie on réserve ou libère la section paratagée
-    if(actualContact == points1 || actualContact == points2){
-        if(!sharedSectionRequested){
-            sharedSectionRequested = !sharedSectionRequested;
-            sharedSection->getAccess(loco,SharedSectionInterface::Priority::LowPriority);
-        }else{
-            sharedSectionRequested = !sharedSectionRequested;
-            sharedSection->leave(loco);
-        }
-    }
-}
-
 void LocomotiveBehavior::run()
 {
     //Initialisation de la locomotive
@@ -31,28 +15,32 @@ void LocomotiveBehavior::run()
     loco.demarrer();
     loco.afficherMessage("Ready!");
 
+    /* A vous de jouer ! */
+
     // Vous pouvez appeler les méthodes de la section partagée comme ceci :
-//    sharedSection->request(loco,SharedSectionInterface::Priority::LowPriority);
-//    sharedSection->getAccess(loco,SharedSectionInterface::Priority::LowPriority);
-//    sharedSection->leave(loco);
+    //sharedSection->request(loco);
+    //sharedSection->getAccess(loco);
+    //sharedSection->leave(loco);
 
-    // la loco commence par attendre le premier prochain contact
-    attendre_contact(contactList.at(0));
+    attendre_contact(startPos);
+
     while(1) {
-        // effectue NB_TOUR_CHANGEMENT_SENS fois un tour de circuit
-        for(int i = 0; i < NB_TOUR_CHANGEMENT_SENS; i ++)
-            for(int j = 1; j < contactList.size(); j++){
-                attendre_contact(contactList.at(j));
-                getAccessSS(contactList.at(j), CONTACT_POINTS_1, CONTACT_POINTS_2);
+        // Faire 2 tours avant de changer de sens
+        for(uint i = 0; i < 2; ++i) {
+            if(loco.numero() == 7) {
+                accessSharedSection(initialDirectionLocoA, 16, 5, 6, 15);
+            } else { //Loco 42
+                accessSharedSection(initialDirectionLocoB, 12, 2, 3, 11);
             }
-        loco.inverserSens();
+            attendre_contact(startPos);
+        }
 
-        // effectue NB_TOUR_CHANGEMENT_SENS fois un tour de circuit
-        for(int i = 0; i < NB_TOUR_CHANGEMENT_SENS; i ++)
-            for(int j = contactList.size() - 2; j >= 0; j--){
-                attendre_contact(contactList.at(j));
-                getAccessSS(contactList.at(j), CONTACT_POINTS_1, CONTACT_POINTS_2);
-            }
+        // Changement de sens
+        if(loco.numero() == 7) {
+            initialDirectionLocoA = !initialDirectionLocoA;
+        } else {
+            initialDirectionLocoB = !initialDirectionLocoB;
+        }
         loco.inverserSens();
     }
 }
@@ -66,5 +54,23 @@ void LocomotiveBehavior::printStartMessage()
 void LocomotiveBehavior::printCompletionMessage()
 {
     qDebug() << "[STOP] Thread de la loco" << loco.numero() << "a terminé correctement";
-    loco.afficherMessage("J'ai terminé");
+}
+
+void LocomotiveBehavior::accessSharedSection(bool isInitDirection, int entryInitDirection, int entryChangedDirection, int exitInitDirection, int exitChangedDirection) {
+    // Accès à la SS à partir de ces points
+    if(isInitDirection) {
+        attendre_contact(entryInitDirection);
+    } else {
+        attendre_contact(entryChangedDirection);
+    }
+    sharedSection->getAccess(loco, SharedSectionInterface::Priority::HighPriority);
+
+    // Loco sortie de la SS à partir de ces points
+    if(isInitDirection) {
+        attendre_contact(exitInitDirection);
+    } else {
+        attendre_contact(exitChangedDirection);
+    }
+    sharedSection->leave(loco);
+
 }

@@ -5834,7 +5834,6 @@ tmp/linux/obj/cppmain.o: ../../project_student/prog1/src/cppmain.cpp ../../../Qt
 		/opt/Qt/5.12.7/gcc_64/include/QtCore/qsharedpointer.h \
 		/opt/Qt/5.12.7/gcc_64/include/QtCore/qsharedpointer_impl.h \
 		../../project_student/prog1/src/sharedsectioninterface.h \
-		/opt/Qt/5.12.7/gcc_64/include/QtCore/QVector \
 		../../project_student/prog1/src/sharedsection.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o tmp/linux/obj/cppmain.o ../../project_student/prog1/src/cppmain.cpp
 
@@ -5907,7 +5906,6 @@ tmp/linux/obj/locomotivebehavior.o: ../../project_student/prog1/src/locomotivebe
 		/opt/Qt/5.12.7/gcc_64/include/QtCore/qsharedpointer.h \
 		/opt/Qt/5.12.7/gcc_64/include/QtCore/qsharedpointer_impl.h \
 		../../project_student/prog1/src/sharedsectioninterface.h \
-		/opt/Qt/5.12.7/gcc_64/include/QtCore/QVector \
 		../../../QtrainSim/src/ctrain_handler.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o tmp/linux/obj/locomotivebehavior.o ../../project_student/prog1/src/locomotivebehavior.cpp
 

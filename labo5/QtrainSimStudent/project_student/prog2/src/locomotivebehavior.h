@@ -35,11 +35,7 @@ public:
                                                                                                                                         points(pointsLoco)
     {
         direction = true;
-        if(loco.priority == 1) {
-            priority = SharedSectionInterface::Priority::HighPriority;
-        } else {
-            priority = SharedSectionInterface::Priority::LowPriority;
-        }
+        priority = (loco.priority == 1 ? SharedSectionInterface::Priority::HighPriority : SharedSectionInterface::Priority::LowPriority);
     }
 
 protected:
