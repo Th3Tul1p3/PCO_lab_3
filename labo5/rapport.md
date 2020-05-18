@@ -16,7 +16,7 @@ Les deux locomotives tournent en rond, chacune sur leur cercle initial (une à l
 
 ### Aiguillages
 
-La gestion des aiguillages est réalisée par la classe `SharedSection`. Au moment où une des deux locomotive s'est vue autorisé l'accès à la section partagée. Ceci afin de garantir qu'une fois que la locomotive est engagée sur la section partagée, celle-ci ne peut pas être changée.
+La gestion des aiguillages est réalisée par la classe `SharedSection`. Au moment où une des deux locomotive s'est vue autorisé l'accès à la section partagée on modifie les aiguillage en fonction de son numéro. Étant donnée qu'on ne peut pas savoir leurs états, on envoi toujours la direction que de doit avoir chaque aiguillage. 
 
 ### Booléen de direction
 
@@ -24,23 +24,27 @@ l'Attribut à été ajouté à la classe `LocomotiveBehavior` afin d'avoir un in
 
 ### Classe `LocoSSPoint`
 
-Cette classe à été ajoutée afin de faciliter le stockage des points importants à l'accès de la section partagée de chaque locomotive. Cette classe stocke les points de contacts auxquels chaque locomotive doit faire la demande d'accès, l'accès, ainsi que la sortie de la section partagée. Cette classe contient les points de contacts pour quand la locomotive va dans le sens initial, ainsi que le sens inversé.
+Cette classe à été ajoutée afin de faciliter le stockage des points importants pour chaque locomotive. Cette classe stocke les points de contacts auxquels la locomotive doit faire la demande d'accès ou pour la sortie de la section partagée. Cette classe contient les points de contacts pour quand la locomotive va dans le sens initial, ainsi que le sens inversé. Ce groupe de point est passé en argument à la classe `LocomotiveBehavior`. 
 
 ### Point de départ
 
-Le point de départ de chaque locomotive est passé à la classe `LocomotiveBehavior` afin d'aider à compter le nombre de tours avant le changement de direction
+Le point de départ de chaque locomotive est passé à la classe `LocomotiveBehavior` afin d'aider à compter le nombre de tours avant le changement de direction.
 
 ### `SharedSection` - booléen indiquant si la locomotive prioritaire est en attente
 
-Vu qu'il n'y a que deux locomotives, et qu'une de ces locomotive est prioritaire, il n'est pas util d'avoir un compteur. Cet indicateur modifié lors de la demande d'accès et lors de la sortie est suffisant à réaliser les objectifs du labo.
+Vu qu'il n'y a que deux locomotives, et qu'une de ces locomotive est prioritaire, il n'est pas utile d'avoir un compteur. Cet indicateur est modifié lors de la demande d'accès et lors de la sortie est suffisant à réaliser les objectifs du labo.
+
+### Arrêt d'urgence
+
+L'arrêt d'urgence consiste à arrêter les deux locomotives dans un premier temps et ensuite on effectue l’extinction des phares et l'affichage d'un message. Cela afin de prioriser les opérations.
 
 ## Tests effectués
 
 - Le changement de direction d'une des locomotive n'a pas d'effet sur la direction de l'autre locomotive
-  - Une locomotive mise en pause reprend son exécution normale même si l'autre à changé de direction entre temps
+  - Une locomotive mise en pause reprend son exécution normale même si l'autre à changé de direction entre temps.
 - Si une locomotive est engagée sur la section partagée, l'autre ne peut pas y accéder
-  - En lançant le programme de base, les deux locomotives arrivent quasi en même temps à leur point de demande d'accès à la section partagée
-    - Dans le premier programme on voit que la locomotive Bleue s'arrête jusqu'à que la locomotive rouge ait passé son point de sortie de section partagée
-    - Dans le deuxième programme, on voit que la locomotive prioritaire (Bleue) prend la priorité sur la rouge (qui affiche un message indiquant qu'elle laisse sa place à la locomotive prioritaire)
+  - En lançant le programme de base, les deux locomotives arrivent quasi en même temps à leur point de demande d'accès à la section partagée.
+    - Dans le premier programme on voit que la locomotive Bleue s'arrête jusqu'à que la locomotive rouge soit sortie de la section partagée.
+    - Dans le deuxième programme, on voit que la locomotive prioritaire (Bleue) accède à la section partagée contrairement à la rouge (qui affiche un message indiquant qu'elle laisse sa place à la locomotive prioritaire).
 - La direction des locomotives n'a pas d'effet sur la priorité d'accès à la section partagée
 - Si la locomotive de priorité basse est engagée sur la section partagée, la locomotive prioritaire s'arrête et attend que la section partagée soit libre.
