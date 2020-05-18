@@ -324,6 +324,7 @@ DIST          = /opt/Qt/5.12.7/gcc_64/mkspecs/features/spec_pre.prf \
 		../../../QtrainSim/src/voieaiguillageenroule.h \
 		../../../QtrainSim/src/voieaiguillagetriple.h \
 		../../../QtrainSim/src/ctrain_handler.h \
+		../../project_student/prog2/src/locoSSPoints.h \
 		../../project_student/prog2/src/sharedsectioninterface.h \
 		../../project_student/prog2/src/locomotive.h \
 		../../project_student/prog2/src/launchable.h \
@@ -732,7 +733,7 @@ distdir: FORCE
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents ../../../QtrainSim/qtrainsim.qrc $(DISTDIR)/
 	$(COPY_FILE) --parents /opt/Qt/5.12.7/gcc_64/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../../../QtrainSim/src/mainwindow.h ../../../QtrainSim/src/voie.h ../../../QtrainSim/src/voiedroite.h ../../../QtrainSim/src/voiecourbe.h ../../../QtrainSim/src/voieaiguillage.h ../../../QtrainSim/src/voiecroisement.h ../../../QtrainSim/src/voievariable.h ../../../QtrainSim/src/voiebuttoir.h ../../../QtrainSim/src/voietraverseejonction.h ../../../QtrainSim/src/simview.h ../../../QtrainSim/src/connect.h ../../../QtrainSim/src/commandetrain.h ../../../QtrainSim/src/general.h ../../../QtrainSim/src/loco.h ../../../QtrainSim/src/contact.h ../../../QtrainSim/src/segment.h ../../../QtrainSim/src/trainsimsettings.h ../../../QtrainSim/src/maquettemanager.h ../../../QtrainSim/src/voieaiguillageenroule.h ../../../QtrainSim/src/voieaiguillagetriple.h ../../../QtrainSim/src/ctrain_handler.h ../../project_student/prog2/src/sharedsectioninterface.h ../../project_student/prog2/src/locomotive.h ../../project_student/prog2/src/launchable.h ../../project_student/prog2/src/locomotivebehavior.h ../../project_student/prog2/src/sharedsection.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../../../QtrainSim/src/mainwindow.h ../../../QtrainSim/src/voie.h ../../../QtrainSim/src/voiedroite.h ../../../QtrainSim/src/voiecourbe.h ../../../QtrainSim/src/voieaiguillage.h ../../../QtrainSim/src/voiecroisement.h ../../../QtrainSim/src/voievariable.h ../../../QtrainSim/src/voiebuttoir.h ../../../QtrainSim/src/voietraverseejonction.h ../../../QtrainSim/src/simview.h ../../../QtrainSim/src/connect.h ../../../QtrainSim/src/commandetrain.h ../../../QtrainSim/src/general.h ../../../QtrainSim/src/loco.h ../../../QtrainSim/src/contact.h ../../../QtrainSim/src/segment.h ../../../QtrainSim/src/trainsimsettings.h ../../../QtrainSim/src/maquettemanager.h ../../../QtrainSim/src/voieaiguillageenroule.h ../../../QtrainSim/src/voieaiguillagetriple.h ../../../QtrainSim/src/ctrain_handler.h ../../project_student/prog2/src/locoSSPoints.h ../../project_student/prog2/src/sharedsectioninterface.h ../../project_student/prog2/src/locomotive.h ../../project_student/prog2/src/launchable.h ../../project_student/prog2/src/locomotivebehavior.h ../../project_student/prog2/src/sharedsection.h $(DISTDIR)/
 	$(COPY_FILE) --parents ../../../QtrainSim/src/main.cpp ../../../QtrainSim/src/mainwindow.cpp ../../../QtrainSim/src/voie.cpp ../../../QtrainSim/src/voiedroite.cpp ../../../QtrainSim/src/voiecourbe.cpp ../../../QtrainSim/src/voieaiguillage.cpp ../../../QtrainSim/src/voiecroisement.cpp ../../../QtrainSim/src/voievariable.cpp ../../../QtrainSim/src/voiebuttoir.cpp ../../../QtrainSim/src/voietraverseejonction.cpp ../../../QtrainSim/src/simview.cpp ../../../QtrainSim/src/commandetrain.cpp ../../../QtrainSim/src/loco.cpp ../../../QtrainSim/src/contact.cpp ../../../QtrainSim/src/segment.cpp ../../../QtrainSim/src/trainsimsettings.cpp ../../../QtrainSim/src/maquettemanager.cpp ../../../QtrainSim/src/voieaiguillageenroule.cpp ../../../QtrainSim/src/voieaiguillagetriple.cpp ../../../QtrainSim/src/ctrain_handler.cpp ../../project_student/prog2/src/locomotive.cpp ../../project_student/prog2/src/cppmain.cpp ../../project_student/prog2/src/locomotivebehavior.cpp $(DISTDIR)/
 
 
@@ -5834,7 +5835,7 @@ tmp/linux/obj/cppmain.o: ../../project_student/prog2/src/cppmain.cpp ../../../Qt
 		/opt/Qt/5.12.7/gcc_64/include/QtCore/qsharedpointer.h \
 		/opt/Qt/5.12.7/gcc_64/include/QtCore/qsharedpointer_impl.h \
 		../../project_student/prog2/src/sharedsectioninterface.h \
-		/opt/Qt/5.12.7/gcc_64/include/QtCore/QVector \
+		../../project_student/prog2/src/locoSSPoints.h \
 		../../project_student/prog2/src/sharedsection.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o tmp/linux/obj/cppmain.o ../../project_student/prog2/src/cppmain.cpp
 
@@ -5907,8 +5908,8 @@ tmp/linux/obj/locomotivebehavior.o: ../../project_student/prog2/src/locomotivebe
 		/opt/Qt/5.12.7/gcc_64/include/QtCore/qsharedpointer.h \
 		/opt/Qt/5.12.7/gcc_64/include/QtCore/qsharedpointer_impl.h \
 		../../project_student/prog2/src/sharedsectioninterface.h \
-		../../../QtrainSim/src/ctrain_handler.h \
-		/opt/Qt/5.12.7/gcc_64/include/QtCore/QVector
+		../../project_student/prog2/src/locoSSPoints.h \
+		../../../QtrainSim/src/ctrain_handler.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o tmp/linux/obj/locomotivebehavior.o ../../project_student/prog2/src/locomotivebehavior.cpp
 
 tmp/linux/obj/qrc_qtrainsim.o: tmp/linux/rcc/qrc_qtrainsim.cpp 

@@ -6,6 +6,7 @@ CONFIG += c++17
 LIBS += -lpcosynchro
 
 HEADERS +=  \
+    src/locoSSPoints.h \
     src/sharedsectioninterface.h \
     src/locomotive.h \
     src/launchable.h \

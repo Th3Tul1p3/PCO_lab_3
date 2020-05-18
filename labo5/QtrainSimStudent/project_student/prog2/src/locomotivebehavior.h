@@ -11,30 +11,35 @@
 #include "locomotive.h"
 #include "launchable.h"
 #include "sharedsectioninterface.h"
-#include "ctrain_handler.h"
-#include <QVector>
+#include "locoSSPoints.h"
 
 /**
  * @brief La classe LocomotiveBehavior représente le comportement d'une locomotive
  */
 class LocomotiveBehavior : public Launchable
 {
+private:
+    int startPos;
+    SharedSectionInterface::Priority priority;
+    LocoSSPoint points;
+    // Indique la direction de la locomotive (true si direction initiale, false autrement)
+    bool direction;
 public:
     /*!
      * \brief locomotiveBehavior Constructeur de la classe
      * \param loco la locomotive dont on représente le comportement
      */
-    LocomotiveBehavior(Locomotive& loco,
-                       std::shared_ptr<SharedSectionInterface> &sharedSection ,
-                       const QVector<int> &contactList,
-                       const QVector<int> &acceptContact,
-                       const QVector<int> &requestContact) :
-        loco(loco),
-        sharedSection(sharedSection),
-        contactList(contactList),
-        acceptContact(acceptContact),
-        requestContact(requestContact){
-        priority = loco.priority > 0? SharedSectionInterface::Priority::HighPriority : SharedSectionInterface::Priority::LowPriority;
+    LocomotiveBehavior(Locomotive& loco, std::shared_ptr<SharedSectionInterface> sharedSection, int startPos, LocoSSPoint pointsLoco) : loco(loco),
+                                                                                                                                        sharedSection(sharedSection),
+                                                                                                                                        startPos(startPos),
+                                                                                                                                        points(pointsLoco)
+    {
+        direction = true;
+        if(loco.priority == 1) {
+            priority = SharedSectionInterface::Priority::HighPriority;
+        } else {
+            priority = SharedSectionInterface::Priority::LowPriority;
+        }
     }
 
 protected:
@@ -63,21 +68,16 @@ protected:
      */
     std::shared_ptr<SharedSectionInterface> sharedSection;
 
+    /*
+     * Vous êtes libres d'ajouter des méthodes ou attributs
+     *
+     * Par exemple la priorité ou le parcours
+     */
 
-private:
-    QVector<int> contactList;
-    void getAccessSS(unsigned int actualContact);
-    void getRequestSS(unsigned int actualContact);
-    // contacts auquel on accepte ou non l'accès
-    QVector<int> acceptContact;
-    // contacts auquel on demande l'accès
-    QVector<int> requestContact;
-    // garde une trace de la demande de bloquage de la section paratagée
-    bool sharedSectionAccessed = false;
-    bool sharedSectionRequested = false;
-    // conversion en niveau de priorité
-    SharedSectionInterface::Priority priority;
-    void processContat(int contact);
+    /**
+     * @brief accessSharedSection Fonction permettant à une loco de demander l'accès, d'entrer et de sortir de la SS
+     */
+    void accessSharedSection();
 };
 
 #endif // LOCOMOTIVEBEHAVIOR_H
