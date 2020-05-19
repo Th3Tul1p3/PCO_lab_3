@@ -27,7 +27,7 @@ private:
     PcoMutex mutex;
     PcoSemaphore synchro;
     bool isSectionFree;
-    uint nbWaiting;
+    bool isWaiting;
 
 public:
 
@@ -35,7 +35,7 @@ public:
      * @brief SharedSection Constructeur de la classe qui représente la section partagée.
      * Initialisez vos éventuels attributs ici, sémaphores etc.
      */
-    SharedSection() : synchro(0), isSectionFree(true), nbWaiting(0) {}
+    SharedSection() : synchro(0), isSectionFree(true), isWaiting(false) {}
 
     /**
      * @brief request Méthode a appeler pour indiquer que la locomotive désire accéder à la
@@ -65,11 +65,10 @@ public:
         while(!isSectionFree) {
             loco.arreter();
             isLocoStopped = true;
-            nbWaiting++;
+            isWaiting = true;
             mutex.unlock();
             synchro.acquire();
             mutex.lock();
-            nbWaiting--;
         }
 
         // Mise en place des aiguillages une fois la SS libérée
@@ -105,8 +104,10 @@ public:
      */
     void leave(Locomotive& loco) override {
         mutex.lock();
-        if(nbWaiting)
+        if(isWaiting){
             synchro.release();
+            isWaiting = false;
+        }
         isSectionFree = true;
 
         mutex.unlock();
