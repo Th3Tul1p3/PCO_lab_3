@@ -14,14 +14,27 @@
 #include "computationmanager.h"
 
 
-ComputationManager::ComputationManager(int maxQueueSize): MAX_TOLERATED_QUEUE_SIZE(maxQueueSize)
+ComputationManager::ComputationManager(int maxQueueSize): MAX_TOLERATED_QUEUE_SIZE(maxQueueSize), id(0)
 {
     // TODO
 }
 
 int ComputationManager::requestComputation(Computation c) {
     // TODO
-    return -1;
+    id ++;
+    switch(c.computationType){
+        case ComputationType::A:
+            computationA.emplace(id, c);
+            break;
+        case ComputationType::B:
+            computationB.emplace(id, c);
+            break;
+        case ComputationType::C:
+            computationC.emplace(id, c);
+            break;
+    }
+
+    return id;
 }
 
 void ComputationManager::abortComputation(int id) {
