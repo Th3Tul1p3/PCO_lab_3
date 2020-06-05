@@ -203,6 +203,9 @@ private:
     std::map<int, Computation> computationA;
     std::map<int, Computation> computationB;
     std::map<int, Computation> computationC;
+
+    Condition waitNotFullA,waitNotFullB,waitNotFullC;
+    Condition waitNotEmptyA,waitNotEmptyB,waitNotEmptyC;
 };
 
 #endif // COMPUTATIONMANAGER_H
