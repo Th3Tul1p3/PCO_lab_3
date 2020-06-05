@@ -12,6 +12,7 @@
 // afin de faire attendre les threads appelants et aussi afin que le code compile.
 
 #include "computationmanager.h"
+#include <utility>      // std::pair
 
 
 ComputationManager::ComputationManager(int maxQueueSize): MAX_TOLERATED_QUEUE_SIZE(maxQueueSize), id(0), waitNotFullA(Condition()),
@@ -19,7 +20,9 @@ ComputationManager::ComputationManager(int maxQueueSize): MAX_TOLERATED_QUEUE_SI
                                                                                                         waitNotFullC(Condition()),
                                                                                                         waitNotEmptyA(Condition()),
                                                                                                         waitNotEmptyB(Condition()),
-                                                                                                        waitNotEmptyC(Condition())
+                                                                                                        waitNotEmptyC(Condition()),
+                                                                                                        waitNotEmptyResult(Condition())
+
 {
     // TODO
 }
@@ -68,20 +71,21 @@ void ComputationManager::abortComputation(int id) {
 
 Result ComputationManager::getNextResult() {
     // TODO
-    // Replace all of the code below by your code
-
-    // Filled with some code in order to make the thread in the UI wait
+    std::map<int,Result>::iterator it;
     monitorIn();
-    auto c = Condition();
-    wait(c);
+    // si il n' y a pas de résultat on se met en attente
+    while(resultMap.empty())
+        wait(waitNotEmptyResult);
+    it = resultMap.begin();
+    resultMap.erase(it);
     monitorOut();
 
-    return Result(-1, 0.0);
+    return it->second;
 }
 
 Request ComputationManager::getWork(ComputationType computationType) {
     // TODO
-    std::map<int,Computation>::iterator it;
+    std::map<int, Computation> tmpPair;
 
     monitorIn();
     switch(computationType){
@@ -90,8 +94,8 @@ Request ComputationManager::getWork(ComputationType computationType) {
             while(computationA.size() == 0)
                 wait(waitNotEmptyA);
             // on copie et efface le premier calcul de la file
-            it = computationA.begin();
-            computationA.erase(it);
+            tmpPair.emplace(computationA.begin()->first,computationA.begin()->second);
+            computationA.erase(computationA.begin());
 
             // on signal au buffer qu'il y a une place de libre
             signal(waitNotFullA);
@@ -102,8 +106,8 @@ Request ComputationManager::getWork(ComputationType computationType) {
                 wait(waitNotEmptyB);
 
             // on copie et efface le premier calcul de la file
-            it = computationB.begin();
-            computationB.erase(it);
+            tmpPair.emplace(computationB.begin()->first,computationB.begin()->second);
+            computationB.erase(computationB.begin());
 
             // on signal au buffer qu'il y a une place de libre
             signal(waitNotFullB);
@@ -114,8 +118,8 @@ Request ComputationManager::getWork(ComputationType computationType) {
                 wait(waitNotEmptyC);
 
             // on copie et efface le premier calcul de la file
-            it = computationC.begin();
-            computationC.erase(it);
+            tmpPair.emplace(computationC.begin()->first,computationC.begin()->second);
+            computationC.erase(computationC.begin());
 
             // on signal au buffer qu'il y a une place de libre
             signal(waitNotFullC);
@@ -123,16 +127,20 @@ Request ComputationManager::getWork(ComputationType computationType) {
     }
     monitorOut();
 
-    return Request(it->second, it->first);
+    return Request(tmpPair.begin()->second, tmpPair.begin()->first);
 }
 
 bool ComputationManager::continueWork(int id) {
     // TODO
-    return false;
+    return true;
 }
 
 void ComputationManager::provideResult(Result result) {
-    // TODO
+    // on ajoute un résultat dans la file et on le signal
+    monitorIn();
+    resultMap.emplace(result.getId(),result);
+    signal(waitNotEmptyResult);
+    monitorOut();
 }
 
 void ComputationManager::stop() {
