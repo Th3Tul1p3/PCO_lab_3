@@ -21,7 +21,8 @@ ComputationManager::ComputationManager(int maxQueueSize): MAX_TOLERATED_QUEUE_SI
                                                                                                         waitNotEmptyA(Condition()),
                                                                                                         waitNotEmptyB(Condition()),
                                                                                                         waitNotEmptyC(Condition()),
-                                                                                                        waitNotEmptyResult(Condition())
+                                                                                                        waitNotEmptyResult(Condition()),
+                                                                                                        waitOnOrderedResult(Condition())
 
 {
     // TODO
@@ -67,20 +68,46 @@ int ComputationManager::requestComputation(Computation c) {
 
 void ComputationManager::abortComputation(int id) {
     // TODO
+    aborted.emplace(id);
+
+    // on "nettoie" les files d'attentes de calcul
+    monitorIn();
+    if(computationA.find(id) != computationA.end()){// la file des calcul de type A
+        computationA.erase(id);
+        signal(waitNotFullA);
+    }else if (computationB.find(id) != computationB.end()){// la file des calcul de type B
+        computationB.erase(id);
+        signal(waitNotFullB);
+    }else if (computationC.find(id) != computationC.end()){// la file des calcul de type C
+        computationC.erase(id);
+        signal(waitNotFullC);
+    }else if (resultMap.find(id) != resultMap.end()){
+        /* si le calcul n'est pas dans les travaux en attentes cela veut dire qu'il est
+         terminé ou en cours. ici on traite le premier cas */
+        resultMap.erase(id);
+    }
+    monitorOut();
 }
 
 Result ComputationManager::getNextResult() {
     // TODO
-    std::map<int,Result>::iterator it;
+    // initilisation avec un faux résultat pour l'utiliser dans le moniteur
+    Result result = Result(-1,0);
+    static int waitedResultId = 1;
     monitorIn();
     // si il n' y a pas de résultat on se met en attente
     while(resultMap.empty())
         wait(waitNotEmptyResult);
-    it = resultMap.begin();
-    resultMap.erase(it);
+
+    while(resultMap.begin()->first != waitedResultId)
+        wait(waitOnOrderedResult);
+
+    result = resultMap.begin()->second;
+    resultMap.erase(resultMap.begin());
+    waitedResultId++;
     monitorOut();
 
-    return it->second;
+    return result;
 }
 
 Request ComputationManager::getWork(ComputationType computationType) {
@@ -132,14 +159,20 @@ Request ComputationManager::getWork(ComputationType computationType) {
 
 bool ComputationManager::continueWork(int id) {
     // TODO
+    if (aborted.find(id) != aborted.end())
+        return false;
     return true;
 }
 
 void ComputationManager::provideResult(Result result) {
     // on ajoute un résultat dans la file et on le signal
     monitorIn();
-    resultMap.emplace(result.getId(),result);
-    signal(waitNotEmptyResult);
+    // si le calcul est annulé on ne stock pas le résultat
+    if (aborted.find(result.getId()) == aborted.end()){
+        resultMap.emplace(result.getId(),result);
+        signal(waitNotEmptyResult);
+        signal(waitOnOrderedResult);
+    }
     monitorOut();
 }
 

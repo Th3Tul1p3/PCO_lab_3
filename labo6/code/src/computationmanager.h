@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <map>
+#include <set>
 #include "pcosynchro/pcohoaremonitor.h"
 
 /**
@@ -203,11 +204,13 @@ private:
     std::map<int, Computation> computationA;
     std::map<int, Computation> computationB;
     std::map<int, Computation> computationC;
+    std::set<int> aborted;
     std::map<int, Result> resultMap;
 
     Condition waitNotFullA,waitNotFullB,waitNotFullC;
     Condition waitNotEmptyA,waitNotEmptyB,waitNotEmptyC;
-    Condition waitNotEmptyResult;
+    Condition waitNotEmptyResult, waitOnOrderedResult;
+    int waitedResultId = 1;
 };
 
 #endif // COMPUTATIONMANAGER_H
