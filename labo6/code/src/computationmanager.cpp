@@ -22,7 +22,10 @@ ComputationManager::ComputationManager(int maxQueueSize): MAX_TOLERATED_QUEUE_SI
                                                                                                         waitNotEmptyB(Condition()),
                                                                                                         waitNotEmptyC(Condition()),
                                                                                                         waitNotEmptyResult(Condition()),
-                                                                                                        waitOnOrderedResult(Condition())
+                                                                                                        waitOnOrderedResult(Condition()),
+                                                                                                        nbWaitNotFullA(0),nbWaitNotFullB(0),nbWaitNotFullC(0),
+                                                                                                        nbWaitNotEmptyA(0),nbWaitNotEmptyB(0),nbWaitNotEmptyC(0),
+                                                                                                        nbWaitNotEmptyResult(0), nbWaitOnOrderedResult(0)
 
 {
     // TODO
@@ -35,34 +38,40 @@ int ComputationManager::requestComputation(Computation c) {
     switch(c.computationType){
         case ComputationType::A:
             // on se met en attente si plus de place dans la file
-            while(computationA.size() >= MAX_TOLERATED_QUEUE_SIZE)
+            nbWaitNotFullA++;
+            while(computationA.size() >= MAX_TOLERATED_QUEUE_SIZE && !stopped)
                 wait(waitNotFullA);
-
+            nbWaitNotFullA--;
+            if(stopped) break;
             // on ajoute le calcul à la file et on signale qu'il y a un calcul
             computationA.emplace(id, c);
             signal(waitNotEmptyA);
             break;
         case ComputationType::B:
             // on se met en attente si plus de place dans la file
-            while(computationB.size() >= MAX_TOLERATED_QUEUE_SIZE)
+            nbWaitNotFullB++;
+            while(computationB.size() >= MAX_TOLERATED_QUEUE_SIZE && !stopped)
                 wait(waitNotFullB);
-
+            nbWaitNotFullB--;
+            if(stopped) break;
             // on ajoute le calcul à la file et on signale qu'il y a un calcul
             computationB.emplace(id, c);
             signal(waitNotEmptyB);
             break;
         case ComputationType::C:
             // on se met en attente si plus de place dans la file
-            while(computationC.size() >= MAX_TOLERATED_QUEUE_SIZE)
+            nbWaitNotFullC++;
+            while(computationC.size() >= MAX_TOLERATED_QUEUE_SIZE && !stopped)
                 wait(waitNotFullC);
-
+            nbWaitNotFullC--;
+            if(stopped) break;
             // on ajoute le calcul à la file et on signale qu'il y a un calcul
             computationC.emplace(id, c);
             signal(waitNotEmptyC);
             break;
     }
     monitorOut();
-
+    if(stopped) throwStopException();
     return id;
 }
 
@@ -96,16 +105,22 @@ Result ComputationManager::getNextResult() {
     static int waitedResultId = 1;
     monitorIn();
     // si il n' y a pas de résultat on se met en attente
-    while(resultMap.empty())
+    nbWaitNotEmptyResult++;
+    while(resultMap.empty() && !stopped)
         wait(waitNotEmptyResult);
+    nbWaitNotEmptyResult--;
 
-    while(resultMap.begin()->first != waitedResultId)
+    nbWaitOnOrderedResult++;
+    while(resultMap.begin()->first != waitedResultId && !stopped)
         wait(waitOnOrderedResult);
-
-    result = resultMap.begin()->second;
-    resultMap.erase(resultMap.begin());
-    waitedResultId++;
+    nbWaitOnOrderedResult--;
+    if(stopped){
+        result = resultMap.begin()->second;
+        resultMap.erase(resultMap.begin());
+        waitedResultId++;
+    }
     monitorOut();
+    if(stopped) throwStopException();
 
     return result;
 }
@@ -118,8 +133,11 @@ Request ComputationManager::getWork(ComputationType computationType) {
     switch(computationType){
         case ComputationType::A:
             // si la file est vide on se met en attente
-            while(computationA.size() == 0)
+            nbWaitNotEmptyA++;
+            while(computationA.size() == 0 && !stopped)
                 wait(waitNotEmptyA);
+            nbWaitNotEmptyA--;
+            if(stopped)break;
             // on copie et efface le premier calcul de la file
             tmpPair.emplace(computationA.begin()->first,computationA.begin()->second);
             computationA.erase(computationA.begin());
@@ -129,9 +147,11 @@ Request ComputationManager::getWork(ComputationType computationType) {
             break;
         case ComputationType::B:
             // si la file est vide on se met en attente
-            while(computationB.size() == 0)
+            nbWaitNotEmptyB++;
+            while(computationB.size() == 0 && !stopped)
                 wait(waitNotEmptyB);
-
+            nbWaitNotEmptyB--;
+            if(stopped)break;
             // on copie et efface le premier calcul de la file
             tmpPair.emplace(computationB.begin()->first,computationB.begin()->second);
             computationB.erase(computationB.begin());
@@ -141,9 +161,11 @@ Request ComputationManager::getWork(ComputationType computationType) {
             break;
         case ComputationType::C:
             // si la file est vide on se met en attente
-            while(computationC.size() == 0)
+            nbWaitNotEmptyC++;
+            while(computationC.size() == 0 && !stopped)
                 wait(waitNotEmptyC);
-
+            nbWaitNotEmptyC--;
+            if(stopped)break;
             // on copie et efface le premier calcul de la file
             tmpPair.emplace(computationC.begin()->first,computationC.begin()->second);
             computationC.erase(computationC.begin());
@@ -153,13 +175,14 @@ Request ComputationManager::getWork(ComputationType computationType) {
             break;
     }
     monitorOut();
+    if(stopped) throwStopException();
 
     return Request(tmpPair.begin()->second, tmpPair.begin()->first);
 }
 
 bool ComputationManager::continueWork(int id) {
     // TODO
-    if (aborted.find(id) != aborted.end())
+    if (aborted.find(id) != aborted.end() || stopped)
         return false;
     return true;
 }
@@ -178,4 +201,41 @@ void ComputationManager::provideResult(Result result) {
 
 void ComputationManager::stop() {
     // TODO
+    monitorIn();
+    stopped = true;
+    stopWaitingQueue(nbWaitNotFullA,waitNotFullA);
+    stopWaitingQueue(nbWaitNotFullB,waitNotFullB);
+    stopWaitingQueue(nbWaitNotFullC,waitNotFullC);
+
+    stopWaitingQueue(nbWaitNotEmptyA,waitNotEmptyA);
+    stopWaitingQueue(nbWaitNotEmptyB,waitNotEmptyB);
+    stopWaitingQueue(nbWaitNotEmptyC,waitNotEmptyC);
+
+    stopWaitingQueue(nbWaitNotEmptyResult,waitNotEmptyResult);
+    stopWaitingQueue(nbWaitOnOrderedResult,waitOnOrderedResult);
+
+    cleanRessources();
+    monitorOut();
+}
+
+/**
+ * @brief ComputationManager::stopWaitingQueue réveil tous les threads en attente
+ * @param cpt nombre de signaux à envoyés
+ * @param cond condition sur laquelle envoyer le signal
+ */
+void ComputationManager::stopWaitingQueue(unsigned cpt, Condition &cond){
+    for(size_t i = 0; i < cpt; i++)
+        signal(cond);
+}
+
+/**
+ * @brief ComputationManager::cleanRessources nettoie toutes les map et les ressources
+ */
+void ComputationManager::cleanRessources(){
+    computationA.erase(computationA.begin(),computationA.end());
+    computationB.erase(computationB.begin(),computationB.end());
+    computationC.erase(computationC.begin(),computationC.end());
+
+    aborted.erase(aborted.begin(), aborted.end());
+    resultMap.erase(resultMap.begin(),resultMap.end());
 }

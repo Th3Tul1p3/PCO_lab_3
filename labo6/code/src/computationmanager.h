@@ -182,11 +182,20 @@ public:
     void stop();
 
 protected:
+    void stopWaitingQueue(unsigned cpt, Condition &cond);
+    void cleanRessources();
 
-    // Ajoutez vos attributs et déclarations de méthodes ici
-    // P.ex. variables conditions et structure de données pour le buffer
+    std::map<int, Computation> computationA;
+    std::map<int, Computation> computationB;
+    std::map<int, Computation> computationC;
+    std::set<int> aborted;
+    std::map<int, Result> resultMap;
 
-    // Queues
+    Condition waitNotFullA,waitNotFullB,waitNotFullC;
+    Condition waitNotEmptyA,waitNotEmptyB,waitNotEmptyC;
+    Condition waitNotEmptyResult, waitOnOrderedResult;
+
+    unsigned nbWaitNotFullA,nbWaitNotFullB,nbWaitNotFullC, nbWaitNotEmptyA,nbWaitNotEmptyB,nbWaitNotEmptyC,nbWaitNotEmptyResult, nbWaitOnOrderedResult;
     const size_t MAX_TOLERATED_QUEUE_SIZE;
 
     bool stopped = false;
@@ -200,17 +209,6 @@ private:
     int nextId = 0;
 
     int id;
-
-    std::map<int, Computation> computationA;
-    std::map<int, Computation> computationB;
-    std::map<int, Computation> computationC;
-    std::set<int> aborted;
-    std::map<int, Result> resultMap;
-
-    Condition waitNotFullA,waitNotFullB,waitNotFullC;
-    Condition waitNotEmptyA,waitNotEmptyB,waitNotEmptyC;
-    Condition waitNotEmptyResult, waitOnOrderedResult;
-    int waitedResultId = 1;
 };
 
 #endif // COMPUTATIONMANAGER_H
