@@ -213,8 +213,6 @@ void ComputationManager::stop() {
 
     stopWaitingQueue(nbWaitNotEmptyResult,waitNotEmptyResult);
     stopWaitingQueue(nbWaitOnOrderedResult,waitOnOrderedResult);
-
-    cleanRessources();
     monitorOut();
 }
 
@@ -224,22 +222,6 @@ void ComputationManager::stop() {
  * @param cond condition sur laquelle envoyer le signal
  */
 void ComputationManager::stopWaitingQueue(unsigned cpt, Condition &cond){
-    monitorIn();
     for(size_t i = 0; i < cpt; i++)
         signal(cond);
-    monitorOut();
-}
-
-/**
- * @brief ComputationManager::cleanRessources nettoie toutes les map et les ressources
- */
-void ComputationManager::cleanRessources(){
-    monitorIn();
-    computationA.erase(computationA.begin(),computationA.end());
-    computationB.erase(computationB.begin(),computationB.end());
-    computationC.erase(computationC.begin(),computationC.end());
-
-    aborted.erase(aborted.begin(), aborted.end());
-    resultMap.erase(resultMap.begin(),resultMap.end());
-    monitorOut();
 }
