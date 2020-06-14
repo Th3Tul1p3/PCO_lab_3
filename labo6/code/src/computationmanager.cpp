@@ -106,7 +106,7 @@ Result ComputationManager::getNextResult() {
     nbWaitNotEmptyResult--;
 
     nbWaitOnOrderedResult++;
-    if (resultMap.begin()->first != waitedResultId && !stopped){
+    while (resultMap.begin()->first != waitedResultId && !stopped){
         wait(waitOnOrderedResult);
     }
     nbWaitOnOrderedResult--;
