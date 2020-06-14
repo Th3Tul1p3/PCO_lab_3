@@ -14,7 +14,6 @@
 #include "computationmanager.h"
 #include <utility>      // std::pair
 
-
 ComputationManager::ComputationManager(int maxQueueSize): MAX_TOLERATED_QUEUE_SIZE(maxQueueSize), id(0), waitNotFullA(Condition()),
                                                                                                         waitNotFullB(Condition()),
                                                                                                         waitNotFullC(Condition()),
@@ -27,9 +26,7 @@ ComputationManager::ComputationManager(int maxQueueSize): MAX_TOLERATED_QUEUE_SI
                                                                                                         nbWaitNotEmptyA(0),nbWaitNotEmptyB(0),nbWaitNotEmptyC(0),
                                                                                                         nbWaitNotEmptyResult(0), nbWaitOnOrderedResult(0)
 
-{
-    // TODO
-}
+{}
 
 int ComputationManager::requestComputation(Computation c) {
     // TODO
@@ -76,7 +73,6 @@ int ComputationManager::requestComputation(Computation c) {
 }
 
 void ComputationManager::abortComputation(int id) {
-    // TODO
     aborted.emplace(id);
 
     // on "nettoie" les files d'attentes de calcul
@@ -99,25 +95,28 @@ void ComputationManager::abortComputation(int id) {
 }
 
 Result ComputationManager::getNextResult() {
-    // TODO
     // initilisation avec un faux résultat pour l'utiliser dans le moniteur
     Result result = Result(-1,0);
-    static int waitedResultId = 1;
+
     monitorIn();
     // si il n' y a pas de résultat on se met en attente
     nbWaitNotEmptyResult++;
-    while(resultMap.empty() && !stopped)
+    if(resultMap.empty() && !stopped)
         wait(waitNotEmptyResult);
     nbWaitNotEmptyResult--;
 
     nbWaitOnOrderedResult++;
-    while(resultMap.begin()->first != waitedResultId && !stopped)
+    if (resultMap.begin()->first != waitedResultId && !stopped){
         wait(waitOnOrderedResult);
+    }
     nbWaitOnOrderedResult--;
-    if(stopped){
+    if(!stopped){
         result = resultMap.begin()->second;
         resultMap.erase(resultMap.begin());
         waitedResultId++;
+    }
+    if (nbWaitOnOrderedResult > 0 && resultMap.begin()->first == waitedResultId){
+        signal(waitOnOrderedResult);
     }
     monitorOut();
     if(stopped) throwStopException();
@@ -126,7 +125,6 @@ Result ComputationManager::getNextResult() {
 }
 
 Request ComputationManager::getWork(ComputationType computationType) {
-    // TODO
     std::map<int, Computation> tmpPair;
 
     monitorIn();
@@ -181,7 +179,6 @@ Request ComputationManager::getWork(ComputationType computationType) {
 }
 
 bool ComputationManager::continueWork(int id) {
-    // TODO
     if (aborted.find(id) != aborted.end() || stopped)
         return false;
     return true;
@@ -194,13 +191,16 @@ void ComputationManager::provideResult(Result result) {
     if (aborted.find(result.getId()) == aborted.end()){
         resultMap.emplace(result.getId(),result);
         signal(waitNotEmptyResult);
+
         signal(waitOnOrderedResult);
+        if (resultMap.begin()->first == waitedResultId){
+            signal(waitOnOrderedResult);
+        }
     }
     monitorOut();
 }
 
 void ComputationManager::stop() {
-    // TODO
     monitorIn();
     stopped = true;
     stopWaitingQueue(nbWaitNotFullA,waitNotFullA);
@@ -224,18 +224,22 @@ void ComputationManager::stop() {
  * @param cond condition sur laquelle envoyer le signal
  */
 void ComputationManager::stopWaitingQueue(unsigned cpt, Condition &cond){
+    monitorIn();
     for(size_t i = 0; i < cpt; i++)
         signal(cond);
+    monitorOut();
 }
 
 /**
  * @brief ComputationManager::cleanRessources nettoie toutes les map et les ressources
  */
 void ComputationManager::cleanRessources(){
+    monitorIn();
     computationA.erase(computationA.begin(),computationA.end());
     computationB.erase(computationB.begin(),computationB.end());
     computationC.erase(computationC.begin(),computationC.end());
 
     aborted.erase(aborted.begin(), aborted.end());
     resultMap.erase(resultMap.begin(),resultMap.end());
+    monitorOut();
 }

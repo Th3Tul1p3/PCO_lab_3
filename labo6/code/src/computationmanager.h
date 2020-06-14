@@ -197,6 +197,7 @@ protected:
 
     unsigned nbWaitNotFullA,nbWaitNotFullB,nbWaitNotFullC, nbWaitNotEmptyA,nbWaitNotEmptyB,nbWaitNotEmptyC,nbWaitNotEmptyResult, nbWaitOnOrderedResult;
     const size_t MAX_TOLERATED_QUEUE_SIZE;
+    int waitedResultId = 1;
 
     bool stopped = false;
 
