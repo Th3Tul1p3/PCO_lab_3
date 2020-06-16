@@ -3,7 +3,7 @@
 //  / ___/ /__/ /_/ / / __// // / __// // / //
 // /_/   \___/\____/ /____/\___/____/\___/  //
 //                                          //
-// Auteurs : Prénom Nom, Prénom Nom
+// Auteurs : Jerôme Arn, Tiffany Bonzon
 
 
 // A vous de remplir les méthodes, vous pouvez ajouter des attributs ou méthodes pour vous aider
@@ -12,27 +12,17 @@
 // afin de faire attendre les threads appelants et aussi afin que le code compile.
 
 #include "computationmanager.h"
-#include <utility>      // std::pair
 
-ComputationManager::ComputationManager(int maxQueueSize): MAX_TOLERATED_QUEUE_SIZE(maxQueueSize), id(0), waitNotFullA(Condition()),
-                                                                                                        waitNotFullB(Condition()),
-                                                                                                        waitNotFullC(Condition()),
-                                                                                                        waitNotEmptyA(Condition()),
-                                                                                                        waitNotEmptyB(Condition()),
-                                                                                                        waitNotEmptyC(Condition()),
-                                                                                                        waitNotEmptyResult(Condition()),
-                                                                                                        waitOnOrderedResult(Condition()),
-                                                                                                        nbWaitNotFullA(0),nbWaitNotFullB(0),nbWaitNotFullC(0),
-                                                                                                        nbWaitNotEmptyA(0),nbWaitNotEmptyB(0),nbWaitNotEmptyC(0),
-                                                                                                        nbWaitNotEmptyResult(0), nbWaitOnOrderedResult(0)
-
-{}
+ComputationManager::ComputationManager(int maxQueueSize): MAX_TOLERATED_QUEUE_SIZE(maxQueueSize), id(0), nextId(0), waitedResultId(1),
+                                                                                                  nbWaitNotFullA(0), nbWaitNotFullB(0), nbWaitNotFullC(0),
+                                                                                                  nbWaitNotEmptyA(0), nbWaitNotEmptyB(0), nbWaitNotEmptyC(0),
+                                                                                                  nbWaitNotEmptyResult(0), nbWaitOnOrderedResult(0) {}
 
 int ComputationManager::requestComputation(Computation c) {
-    // TODO
     monitorIn();
+
     id ++;
-    switch(c.computationType){
+    switch(c.computationType) {
         case ComputationType::A:
             // on se met en attente si plus de place dans la file
             nbWaitNotFullA++;
@@ -67,8 +57,11 @@ int ComputationManager::requestComputation(Computation c) {
             signal(waitNotEmptyC);
             break;
     }
+
     monitorOut();
+
     if(stopped) throwStopException();
+
     return id;
 }
 
@@ -77,20 +70,22 @@ void ComputationManager::abortComputation(int id) {
 
     // on "nettoie" les files d'attentes de calcul
     monitorIn();
-    if(computationA.find(id) != computationA.end()){// la file des calcul de type A
+
+    if(computationA.find(id) != computationA.end()){ // la file des calcul de type A
         computationA.erase(id);
         signal(waitNotFullA);
-    }else if (computationB.find(id) != computationB.end()){// la file des calcul de type B
+    } else if(computationB.find(id) != computationB.end()){ // la file des calcul de type B
         computationB.erase(id);
         signal(waitNotFullB);
-    }else if (computationC.find(id) != computationC.end()){// la file des calcul de type C
+    } else if(computationC.find(id) != computationC.end()){ // la file des calcul de type C
         computationC.erase(id);
         signal(waitNotFullC);
-    }else if (resultMap.find(id) != resultMap.end()){
+    } else if(resultMap.find(id) != resultMap.end()){
         /* si le calcul n'est pas dans les travaux en attentes cela veut dire qu'il est
          terminé ou en cours. ici on traite le premier cas */
         resultMap.erase(id);
     }
+
     monitorOut();
 }
 
@@ -99,26 +94,34 @@ Result ComputationManager::getNextResult() {
     Result result = Result(-1,0);
 
     monitorIn();
+
     // si il n' y a pas de résultat on se met en attente
     nbWaitNotEmptyResult++;
-    if(resultMap.empty() && !stopped)
+    while(resultMap.empty() && !stopped)
         wait(waitNotEmptyResult);
     nbWaitNotEmptyResult--;
 
+    // si l'id n'est pas l'id attendu (ordonné) on se met en attente
     nbWaitOnOrderedResult++;
-    while (resultMap.begin()->first != waitedResultId && !stopped){
+    while(resultMap.begin()->first != waitedResultId && !stopped) {
+        // pour ne pas bloquer tous les résultats quand un calcul est annulé
+        if(aborted.find(waitedResultId) != aborted.end())
+            ++waitedResultId;
         wait(waitOnOrderedResult);
     }
     nbWaitOnOrderedResult--;
+
     if(!stopped){
         result = resultMap.begin()->second;
         resultMap.erase(resultMap.begin());
         waitedResultId++;
     }
-    if (nbWaitOnOrderedResult > 0 && resultMap.begin()->first == waitedResultId){
+
+    if(nbWaitOnOrderedResult > 0 && resultMap.begin()->first == waitedResultId)
         signal(waitOnOrderedResult);
-    }
+
     monitorOut();
+
     if(stopped) throwStopException();
 
     return result;
@@ -128,7 +131,8 @@ Request ComputationManager::getWork(ComputationType computationType) {
     std::map<int, Computation> tmpPair;
 
     monitorIn();
-    switch(computationType){
+
+    switch(computationType) {
         case ComputationType::A:
             // si la file est vide on se met en attente
             nbWaitNotEmptyA++;
@@ -172,7 +176,9 @@ Request ComputationManager::getWork(ComputationType computationType) {
             signal(waitNotFullC);
             break;
     }
+
     monitorOut();
+
     if(stopped) throwStopException();
 
     return Request(tmpPair.begin()->second, tmpPair.begin()->first);
@@ -189,38 +195,37 @@ void ComputationManager::provideResult(Result result) {
     monitorIn();
     // si le calcul est annulé on ne stock pas le résultat
     if (aborted.find(result.getId()) == aborted.end()){
-        resultMap.emplace(result.getId(),result);
+        resultMap.emplace(result.getId(), result);
         signal(waitNotEmptyResult);
 
-        signal(waitOnOrderedResult);
-        if (resultMap.begin()->first == waitedResultId){
+        // réveil de tous les threads en attente d'un résultat ordré
+        for(unsigned i = 0; i < nbWaitOnOrderedResult; ++i)
             signal(waitOnOrderedResult);
-        }
+
     }
+
     monitorOut();
 }
 
 void ComputationManager::stop() {
     monitorIn();
-    stopped = true;
-    stopWaitingQueue(nbWaitNotFullA,waitNotFullA);
-    stopWaitingQueue(nbWaitNotFullB,waitNotFullB);
-    stopWaitingQueue(nbWaitNotFullC,waitNotFullC);
 
-    stopWaitingQueue(nbWaitNotEmptyA,waitNotEmptyA);
-    stopWaitingQueue(nbWaitNotEmptyB,waitNotEmptyB);
-    stopWaitingQueue(nbWaitNotEmptyC,waitNotEmptyC);
+    stopped = true;
+
+    stopWaitingQueue(nbWaitNotFullA, waitNotFullA);
+    stopWaitingQueue(nbWaitNotFullB, waitNotFullB);
+    stopWaitingQueue(nbWaitNotFullC, waitNotFullC);
+
+    stopWaitingQueue(nbWaitNotEmptyA, waitNotEmptyA);
+    stopWaitingQueue(nbWaitNotEmptyB, waitNotEmptyB);
+    stopWaitingQueue(nbWaitNotEmptyC, waitNotEmptyC);
 
     stopWaitingQueue(nbWaitNotEmptyResult,waitNotEmptyResult);
     stopWaitingQueue(nbWaitOnOrderedResult,waitOnOrderedResult);
+
     monitorOut();
 }
 
-/**
- * @brief ComputationManager::stopWaitingQueue réveil tous les threads en attente
- * @param cpt nombre de signaux à envoyés
- * @param cond condition sur laquelle envoyer le signal
- */
 void ComputationManager::stopWaitingQueue(unsigned cpt, Condition &cond){
     for(size_t i = 0; i < cpt; i++)
         signal(cond);
