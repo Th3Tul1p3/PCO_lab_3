@@ -3,7 +3,7 @@
 //  / ___/ /__/ /_/ / / __// // / __// // / //
 // /_/   \___/\____/ /____/\___/____/\___/  //
 //                                          //
-// Auteurs : Prénom Nom, Prénom Nom
+// Auteurs : Jerôme Arn, Tiffany Bonzon
 
 // La déclaration de la classe ComputationManager se trouve en bas du fichier,
 // ajoutez-y les attributs (et fonctions au besoin) pour votre implémentation.
@@ -182,8 +182,18 @@ public:
     void stop();
 
 protected:
+    /**
+     * @brief ComputationManager::stopWaitingQueue réveil tous les threads en attente
+     * @param cpt nombre de signaux à envoyés
+     * @param cond condition sur laquelle envoyer le signal
+     */
     void stopWaitingQueue(unsigned cpt, Condition &cond);
-    void cleanRessources();
+
+    //void cleanRessources();
+
+
+    int id;
+    int nextId;
 
     std::map<int, Computation> computationA;
     std::map<int, Computation> computationB;
@@ -191,13 +201,13 @@ protected:
     std::set<int> aborted;
     std::map<int, Result> resultMap;
 
-    Condition waitNotFullA,waitNotFullB,waitNotFullC;
-    Condition waitNotEmptyA,waitNotEmptyB,waitNotEmptyC;
+    Condition waitNotFullA, waitNotFullB, waitNotFullC;
+    Condition waitNotEmptyA, waitNotEmptyB, waitNotEmptyC;
     Condition waitNotEmptyResult, waitOnOrderedResult;
 
-    unsigned nbWaitNotFullA,nbWaitNotFullB,nbWaitNotFullC, nbWaitNotEmptyA,nbWaitNotEmptyB,nbWaitNotEmptyC,nbWaitNotEmptyResult, nbWaitOnOrderedResult;
+    unsigned nbWaitNotFullA, nbWaitNotFullB,nbWaitNotFullC, nbWaitNotEmptyA, nbWaitNotEmptyB, nbWaitNotEmptyC, nbWaitNotEmptyResult, nbWaitOnOrderedResult;
     const size_t MAX_TOLERATED_QUEUE_SIZE;
-    int waitedResultId = 1;
+    int waitedResultId;
 
     bool stopped = false;
 
@@ -206,10 +216,6 @@ private:
      * @brief throwStopException Throws a StopException (will be handled by the caller)
      */
     inline void throwStopException() {throw StopException();}
-
-    int nextId = 0;
-
-    int id;
 };
 
 #endif // COMPUTATIONMANAGER_H
