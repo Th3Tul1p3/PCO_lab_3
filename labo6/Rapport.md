@@ -42,11 +42,34 @@ Puis nous avons tester avec la GUI fournie que le client pouvait obtenir tous le
 ![](./images/etape2Ordre.png)
 
 - Nous voyons ici que tous les résultats sont affiché par le client
-- Nous voyons également que bien que le résultat 2 est disponible avant le résultat 1, celui-ci n'est affiché par le client qu'après. Même chose pour les résultats 3,4, et 5
+- Nous voyons également que bien que le résultat 2 est disponible avant le résultat 1, celui-ci n'est affiché par le client qu'après. Même chose pour les résultats 3, 4, et 5
 
 ## Étape 3 
 
+Lorsqu'un client demande d'annuler un calcul, nous ajoutons l'id du calcul dans un set afin de s'assurer qu'un id n'y apparaît qu'une seule fois. Puis nous cherchons l'id dans une des 3 files de calculs (A, B, ou C) et dans notre map de résultat afin de le supprimer. Si le calcul est supprimé d'une des 3 files, nous envoyons un signal spécifique à la file afin d'indiquer qu'elle n'est plus pleine.
+
+La méthode `continueWork(id)` va simplement vérifier si l'id passé en paramètre se trouve dans le set des calculs annulés.
+
+Avec l'ajout de cette fonctionnalité, nous avons du légèrement modifier nos méthodes précédantes afin de prendre l'annulation d'un calcul en compte
+
+- `getNextResult()` : Afin de ne pas bloquer l'affichage de tous les résultats suivant un calcul annulé, nous incrémentons notre compteur global si l'id attendu est un id d'un calcul annulé
+- `provideResult(Result)` : Ici, nous vérifions que le calcul n'a pas été annulé avant de placer le résultat dans notre map de résultats et avant de lancer les signaux.
+
 ### Test
+
+Nous avons commencé par vérifier que les tests automatisés passaient 
+
+![](./images/tests3.png)
+
+Puis nous avons tester avec la GUI fournie que la demande d'arrêt d'un calcul soit bien effectuée
+
+![](./images/etape3AbortRes.png)
+
+- Nous voyons ici que le résultat 1 n'est pas affiché, et que les résultats suivants ne sont pas bloqués et arrivent toujours dans le bon ordre
+
+![](./images/etape3AbortFile.png)
+
+- Ici, nous voyons que l'annulation d'un résultat libère une place dans la file d'attente de calculs
 
 ## Étape 4 
 
