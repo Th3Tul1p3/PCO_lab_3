@@ -73,4 +73,19 @@ Puis nous avons tester avec la GUI fournie que la demande d'arrêt d'un calcul s
 
 ## Étape 4 
 
+La méthode stop vapasser le booléen `stopped` à true et, avec l'aide d'une nouvelle fonction `stopWaitingQueue(cmp, condition)`, réveiller tous les threads en attente sur une certaine condition. Toutes les conditions utilisées par nos méthodes sont affectées par `stop()`
+
+Afin d'arrêter au plus vite tous les threads, nous avons du modifier les méthodes
+
+- `requestComputation` et `getWork` : Chaque boucle d'attente va vérifier le bool `stopped`. Une fois le `wait()` passé, si `stopped` est à true, alors nous sortons du switch, et une fois sortit du moniteur, nous lancons le `throwStopException`
+- `getNextResult` : Là aussi, nos boucles d'attentes vérifient la booléen. L'affichage du résultat, la suppression dans la map, et l'incrémentation du compteur global ne sont effectués que si `stopped` est à false, et une fois sortit du moniteur, nous lancons le `throwStopException`
+- `continueWork` : Vérifie maintenant également le booléen `stopped` avant de retourner si le travail doit continuer ou non.
+
 ### Test
+
+Nous avons commencé par vérifier que les tests automatisés passaient 
+
+![](./images/tests4.png)
+
+Puis nous avons tester avec la GUI fournie que le bouton Stop arrête bien tous les threads
+![](./images/etape4Stop.png)
