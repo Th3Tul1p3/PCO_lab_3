@@ -13,7 +13,7 @@
 
 #include "computationmanager.h"
 
-ComputationManager::ComputationManager(int maxQueueSize): MAX_TOLERATED_QUEUE_SIZE(maxQueueSize), id(0), nextId(0), waitedResultId(1),
+ComputationManager::ComputationManager(int maxQueueSize): MAX_TOLERATED_QUEUE_SIZE(maxQueueSize), id(0), waitedResultId(1),
                                                                                                   nbWaitNotFullA(0), nbWaitNotFullB(0), nbWaitNotFullC(0),
                                                                                                   nbWaitNotEmptyA(0), nbWaitNotEmptyB(0), nbWaitNotEmptyC(0),
                                                                                                   nbWaitNotEmptyResult(0), nbWaitOnOrderedResult(0) {}
@@ -201,7 +201,6 @@ void ComputationManager::provideResult(Result result) {
         // réveil de tous les threads en attente d'un résultat ordré
         for(unsigned i = 0; i < nbWaitOnOrderedResult; ++i)
             signal(waitOnOrderedResult);
-
     }
 
     monitorOut();

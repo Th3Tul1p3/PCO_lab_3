@@ -189,11 +189,7 @@ protected:
      */
     void stopWaitingQueue(unsigned cpt, Condition &cond);
 
-    //void cleanRessources();
-
-
     int id;
-    int nextId;
 
     std::map<int, Computation> computationA;
     std::map<int, Computation> computationB;
